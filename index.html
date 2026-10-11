@@ -191,7 +191,7 @@ function playGoreHit(){playGoreSound(goreHits[goreHitIndex++%goreHits.length])}
 function playGoreSplit(){playGoreSound(goreSplits[goreSplitIndex++%goreSplits.length]);if(++goreSplitCount%3===0)playGoreSound(goreFart)}
 function destroy(e){e.dead=true;score+=types[e.kind].hp*100+(e.fragment?75:0);document.getElementById('score').textContent=score;burst(e.x,e.y,e.fragment?8:20);
  if(!e.fragment&&types[e.kind].split){playGoreSplit();const count=types[e.kind].split;for(let i=0;i<count;i++){let a=(i-(count-1)/2)*.52+(Math.random()-.5)*.15;let kind=e.kind===2?0:e.kind===3?0:Math.random()<.45?1:0;let sp=230+Math.random()*80;let frag=makeEnemy(kind,e.x,e.y,e.sz*(e.kind===5?.29:.32),true,-sp,Math.sin(a)*160);frag.y+=Math.sin(a)*Math.min(e.sz*.32,35);enemies.push(frag)}}}
-let entryAudioPending=false; let gameSessionActive=false; let lastFrame=0; function loop(t){syncShootAudio();syncBurnAudio();syncFieldAmbience();if(!gameSessionActive){lastFrame=t;requestAnimationFrame(loop);return;}let dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;elapsed+=dt;
+let entryAudioPending=false; let gameSessionActive=false; let lastFrame=0; function loop(t){syncShootAudio();syncBurnAudio();syncFieldAmbience();if(!gameSessionActive){lastFrame=t;requestAnimationFrame(loop);return;}let dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;elapsed+=dt;const mobilePace=matchMedia('(pointer:coarse)').matches?0.72:1;
 let d=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;c.width=Math.round(w*d);c.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0);ctx.imageSmoothingEnabled=true;
 if(bg.complete&&bg.naturalWidth){let tw=bg.width*h/bg.height;offset=(offset+(mode==='level'||mode==='clear'||mode==='escape'?65:mode==='approach'?65*Math.pow(Math.max(0,1-transitionTime/3.4),1.7):0)*dt)%tw;for(let x=-offset;x<w;x+=tw)ctx.drawImage(bg,x,0,tw,h)}
 let vx=(keys.has('arrowright')||keys.has('d')?1:0)-(keys.has('arrowleft')||keys.has('a')?1:0),vy=(keys.has('arrowdown')||keys.has('s')?1:0)-(keys.has('arrowup')||keys.has('w')?1:0);
@@ -207,10 +207,10 @@ const lane=Math.random();
 const yFraction=lane<.34 ? .05+Math.random()*.20 : lane<.68 ? .75+Math.random()*.20 : .30+Math.random()*.40;
 const enemyY=minY+Math.max(0,maxY-minY)*yFraction;
 const drift=(Math.random()<.5?-1:1)*(16+Math.random()*24);
-enemies.push(makeEnemy(kind,w+sz,enemyY,sz,false,null,drift));spawn=1.05+Math.random()*.65}
+enemies.push(makeEnemy(kind,w+sz,enemyY,sz,false,null,drift));spawn=(1.05+Math.random()*.65)/mobilePace}
 // Tuhoutumattomat arkiesineet ilmestyvät ajoittain kakkojen joukkoon.
 if(mode==='level'){obstacleTimer-=dt;if(obstacleTimer<=0){let kind=Math.floor(Math.random()*3);let sz=Math.min(w*.21,h*.30)*types[Math.floor(Math.random()*4)].s*1.9;if(kind===1)sz*=.78;obstacles.push({kind,x:w+sz,y:h*(.23+Math.random()*.53),sz,vx:-(100+Math.random()*65),phase:Math.random()*6,rot:Math.random()*6.28,spin:(Math.random()-.5)*1.3});obstacleTimer=8.5+Math.random()*6.5}}
-for(let o of obstacles){o.x+=o.vx*dt;o.phase+=dt*1.8;o.rot+=o.spin*dt;let oy=o.y+Math.sin(o.phase)*Math.min(12,o.sz*.1);hitShip(o.x,oy,o.sz*.38,w,h,shipW,shipH)}
+for(let o of obstacles){o.x+=o.vx*dt*mobilePace;o.phase+=dt*1.8;o.rot+=o.spin*dt;let oy=o.y+Math.sin(o.phase)*Math.min(12,o.sz*.1);hitShip(o.x,oy,o.sz*.38,w,h,shipW,shipH)}
 obstacles=obstacles.filter(o=>o.x>-o.sz*2);
 shotWait-=dt;if((keys.has(' ')||shotHeld)&&shotWait<=0&&mode!=='escape'){bullets.push({x:w*px+shipW*.46,y:h*py+shipH*.07,vx:650,vy:0,bounced:false});shotWait=.19}
 for(let b of bullets){b.x+=dt*(b.vx??650);b.y+=dt*(b.vy??0);}
@@ -245,7 +245,7 @@ for(let bullet of bullets){
  }
 }
 
-for(let e of enemies){e.x+=e.vx*dt;e.y+=e.vy*dt;
+for(let e of enemies){e.x+=e.vx*dt*mobilePace;e.y+=e.vy*dt*mobilePace;
 if(!e.fragment){
   // Erilaiset korkeudet ja kevyt pystysuuntainen liike; kimpoaa tunnelin reunoilta.
   e.wave+=dt*e.waveSpeed*.65;
@@ -270,7 +270,7 @@ const {w:ew,h:eh}=bounds(e),ey=e.y+Math.sin(e.phase)*Math.min(9,e.sz*.06);
 for(let b of bullets){if(!e.dead&&b.x<w+100&&Math.abs(b.x-e.x)<ew*.39&&Math.abs(b.y-ey)<eh*.38){e.hp--;playGoreHit();e.flash=.12;b.x=w+1000;if(e.hp<=0)destroy(e);else burst(b.x> w?e.x:b.x,ey,3)}}
 if(!e.dead&&e.grace<=0&&invuln<=0&&Math.abs(w*px-e.x)<ew*.34+shipW*.29&&Math.abs(h*py-ey)<eh*.34+shipH*.28){lives--;playHitAudio();document.getElementById('lives').textContent=lives;updateHearts();invuln=1.35;damageFlash=1.35;burst(w*px,h*py,12);e.dead=true;if(lives<=0){triggerDeath()}}}
 enemies=enemies.filter(e=>!e.dead&&e.x>-300&&e.x<w+500);bullets=bullets.filter(b=>b.x<w+40&&b.x>-45&&b.y>-40&&b.y<h+40);
-if(mode==='boss'&&boss){let b=boss;b.x=w-(h*.98*.88)*.08;b.y=h*.5;b.r=h*.98*.88*.5;bossClock+=dt;bossShot-=dt;b.flash=Math.max(0,b.flash-dt);let attacking=(bossClock%7.2)<4.7;if(attacking&&!bossAttackSoundPlayed){playBossFire();bossAttackSoundPlayed=true;}else if(!attacking){bossAttackSoundPlayed=false;}bossState.textContent=attacking?'AMPUU – VÄISTÄ!':'TAUKO – AMMU NYT!';bossState.style.color=attacking?'#ffb19e':'#bfff9c';bossHpFill.style.width=(100*b.hp/b.max)+'%';if(attacking&&bossShot<=0){let mouthX=b.x-b.r*.66,mouthY=b.y+b.r*.02;let startY=mouthY+(Math.random()-.5)*b.r*.25;let a=Math.atan2(h*py-startY,w*px-mouthX)+(Math.random()-.5)*.24,speed=200+Math.random()*65;veggies.push({x:mouthX,y:startY,vx:-Math.abs(Math.cos(a)*speed),vy:Math.sin(a)*speed,r:(matchMedia('(pointer:coarse)').matches?.68:1)*(9+Math.random()*6),kind:Math.floor(Math.random()*3),rot:0});bossShot=.22+Math.random()*.14}for(let v of veggies){v.x+=v.vx*dt;v.y+=v.vy*dt;v.rot+=dt*5;hitShip(v.x,v.y,v.r,w,h,shipW,shipH)}veggies=veggies.filter(v=>v.x>-30&&v.x<w+30&&v.y>-30&&v.y<h+30);for(let bullet of bullets){if(bullet.x<b.x+b.r*.20&&bullet.x>b.x-b.r*.90&&Math.abs(bullet.y-b.y)<b.r*.82){bullet.x=w+1000;if(!attacking){b.hp--;b.flash=.10;burst(bullet.x>w?b.x:bullet.x,bullet.y,3);if(b.hp<=0){endBoss();break}}}}hitShip(b.x-b.r*.28,b.y,b.r*.35,w,h,shipW,shipH)}
+if(mode==='boss'&&boss){let b=boss;b.x=w-(h*.98*.88)*.08;b.y=h*.5;b.r=h*.98*.88*.5;bossClock+=dt;bossShot-=dt;b.flash=Math.max(0,b.flash-dt);let attacking=(bossClock%7.2)<4.7;if(attacking&&!bossAttackSoundPlayed){playBossFire();bossAttackSoundPlayed=true;}else if(!attacking){bossAttackSoundPlayed=false;}bossState.textContent=attacking?'AMPUU – VÄISTÄ!':'TAUKO – AMMU NYT!';bossState.style.color=attacking?'#ffb19e':'#bfff9c';bossHpFill.style.width=(100*b.hp/b.max)+'%';if(attacking&&bossShot<=0){let mouthX=b.x-b.r*.66,mouthY=b.y+b.r*.02;let startY=mouthY+(Math.random()-.5)*b.r*.25;let a=Math.atan2(h*py-startY,w*px-mouthX)+(Math.random()-.5)*.24,speed=200+Math.random()*65;veggies.push({x:mouthX,y:startY,vx:-Math.abs(Math.cos(a)*speed),vy:Math.sin(a)*speed,r:(matchMedia('(pointer:coarse)').matches?.68:1)*(9+Math.random()*6),kind:Math.floor(Math.random()*3),rot:0});bossShot=(.22+Math.random()*.14)/mobilePace}for(let v of veggies){v.x+=v.vx*dt*mobilePace;v.y+=v.vy*dt*mobilePace;v.rot+=dt*5;hitShip(v.x,v.y,v.r,w,h,shipW,shipH)}veggies=veggies.filter(v=>v.x>-30&&v.x<w+30&&v.y>-30&&v.y<h+30);for(let bullet of bullets){if(bullet.x<b.x+b.r*.20&&bullet.x>b.x-b.r*.90&&Math.abs(bullet.y-b.y)<b.r*.82){bullet.x=w+1000;if(!attacking){b.hp--;b.flash=.10;burst(bullet.x>w?b.x:bullet.x,bullet.y,3);if(b.hp<=0){endBoss();break}}}}hitShip(b.x-b.r*.28,b.y,b.r*.35,w,h,shipW,shipH)}
 if(mode==='bossPause'){bossFinishDelay-=dt;if(bossFinishDelay<=0)startBossVictoryAudio();}
 if(mode==='escape'){escapeTime+=dt;px=Math.min(1.6,px+dt*.48);py+=(.51-py)*Math.min(1,dt*2);if(px>1.3||escapeTime>5)showResults()}
 
