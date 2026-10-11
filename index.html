@@ -200,7 +200,7 @@ if(!gameOver&&mode!=='won'){if(mode==='level'&&rocketEntry<1.65){if(entryAudioPe
 if(mode==='level'){levelTime+=dt;let progress=Math.min(1,levelTime/LEVEL_SECONDS);progressFill.style.width=(progress*100)+'%';progressRocket.style.left='calc('+Math.min(94,progress*94)+'% - 1px)';if(levelTime>=LEVEL_SECONDS)startApproach()}
 if(mode==='clear'){transitionTime+=dt;document.getElementById('approachLabel').textContent='TUKOS PAIKANNETTU!';if(transitionTime>=1.6){bullets=[];mode='approach';transitionTime=0}}
 if(mode==='approach'){transitionTime+=dt;document.getElementById('approachLabel').textContent='TUKOS PAIKANNETTU!';document.getElementById('approachLabel').style.display=transitionTime<2.4?'block':'none';if(transitionTime>=3.4)beginBoss(w,h)}
-if(mode==='level')spawn-=dt;if(mode==='level'&&spawn<=0){let kind=Math.floor(Math.random()*6),tp=types[kind];let sz=Math.min(w*.21,h*.30)*tp.s*1.9;// Koko tunnelin korkeus käyttöön: myös ylä- ja alareitillä tulee vihollisia.
+if(mode==='level')spawn-=dt;if(mode==='level'&&spawn<=0){let kind=Math.floor(Math.random()*6),tp=types[kind];let sz=Math.min(w*.21,h*.30)*tp.s*1.9*(mobilePace<1?.64:1);// Koko tunnelin korkeus käyttöön: myös ylä- ja alareitillä tulee vihollisia.
 const halfHeight=sz*.52;
 const minY=h*.105+halfHeight, maxY=h*.895-halfHeight;
 const lane=Math.random();
@@ -209,7 +209,7 @@ const enemyY=minY+Math.max(0,maxY-minY)*yFraction;
 const drift=(Math.random()<.5?-1:1)*(16+Math.random()*24);
 enemies.push(makeEnemy(kind,w+sz,enemyY,sz,false,null,drift));spawn=(1.05+Math.random()*.65)/mobilePace}
 // Tuhoutumattomat arkiesineet ilmestyvät ajoittain kakkojen joukkoon.
-if(mode==='level'){obstacleTimer-=dt;if(obstacleTimer<=0){let kind=Math.floor(Math.random()*3);let sz=Math.min(w*.21,h*.30)*types[Math.floor(Math.random()*4)].s*1.9;if(kind===1)sz*=.78;obstacles.push({kind,x:w+sz,y:h*(.23+Math.random()*.53),sz,vx:-(100+Math.random()*65),phase:Math.random()*6,rot:Math.random()*6.28,spin:(Math.random()-.5)*1.3});obstacleTimer=8.5+Math.random()*6.5}}
+if(mode==='level'){obstacleTimer-=dt;if(obstacleTimer<=0){let kind=Math.floor(Math.random()*3);let sz=Math.min(w*.21,h*.30)*types[Math.floor(Math.random()*4)].s*1.9*(mobilePace<1?.64:1);if(kind===1)sz*=.78;obstacles.push({kind,x:w+sz,y:h*(.23+Math.random()*.53),sz,vx:-(100+Math.random()*65),phase:Math.random()*6,rot:Math.random()*6.28,spin:(Math.random()-.5)*1.3});obstacleTimer=8.5+Math.random()*6.5}}
 for(let o of obstacles){o.x+=o.vx*dt*mobilePace;o.phase+=dt*1.8;o.rot+=o.spin*dt;let oy=o.y+Math.sin(o.phase)*Math.min(12,o.sz*.1);hitShip(o.x,oy,o.sz*.38,w,h,shipW,shipH)}
 obstacles=obstacles.filter(o=>o.x>-o.sz*2);
 shotWait-=dt;if((keys.has(' ')||shotHeld)&&shotWait<=0&&mode!=='escape'){bullets.push({x:w*px+shipW*.46,y:h*py+shipH*.07,vx:650,vy:0,bounced:false});shotWait=.19}
